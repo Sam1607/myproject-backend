@@ -1,38 +1,86 @@
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout(true)
+        timeout(time: 5, unit: 'MINUTES')
+        disableConcurrentBuilds()
+    }
+
     environment {
-        EC2_IP = "13.211.37.30"
+        GITHUB_CREDENTIALS = 'github-ssh'
+        EC2_USER  = "ubuntu"
+        EC2_IP    = "13.211.37.30"
+        SSH_KEY   = "ec2-pem"
         APP_DIR = "/home/ubuntu/myproject-backend"
-        BACKEND_NAME = "my-first-backend-server"
+        NODE_PATH = "/home/ubuntu/.nvm/versions/node/v20.19.5/bin"
+        GIT_BRANCH = "main"
     }
 
     stages {
-        stage('Checkout') {
+
+        stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/Sam1607/myproject-backend.git'
+                echo "📥 Cloning repository..."
+                git(
+                    branch: "${GIT_BRANCH}",
+                    credentialsId: "${GITHUB_CREDENTIALS}",
+                    url: 'https://github.com/Sam1607/myproject-backend.git'
+                )
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Prepare EC2 Directory') {
             steps {
-                sh 'npm install'
-            }
-        }
-
-        stage('Deploy to EC2') {
-            steps {
-                sshagent(['ec2-key']) {
+                echo "📂 Preparing backend directory on EC2..."
+                sshagent([SSH_KEY]) {
                     sh """
-                    # Sync backend code to EC2
-                    rsync -avz ./ ubuntu@${EC2_IP}:${APP_DIR}/
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} \
+                        'mkdir -p ${APP_DIR}/backend'
+                    """
+                }
+            }
+        }
 
-                    # Connect to EC2 and restart backend
-                    ssh ubuntu@${EC2_IP} '
-                        cd ${APP_DIR}
-                        npm install
-                        pm2 restart ${BACKEND_NAME} || pm2 start server.js --name ${BACKEND_NAME}
-                    '
+        stage('Upload Backend to EC2') {
+            steps {
+                echo "🚀 Uploading backend..."
+                sshagent([SSH_KEY]) {
+                    sh """
+                        rsync -avz --delete \
+                        -e "ssh -o StrictHostKeyChecking=no" \
+                        backend/ ${EC2_USER}@${EC2_IP}:${APP_DIR}/backend/
+                    """
+                }
+            }
+        }
+
+        stage('Install Backend Dependencies (EC2)') {
+            steps {
+                echo "📦 Installing backend dependencies..."
+                sshagent([SSH_KEY]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} '
+                            export PATH=${NODE_PATH}:\$PATH
+                            cd ${APP_DIR}/backend
+                            yarn install --production --frozen-lockfile
+                        '
+                    """
+                }
+            }
+        }
+
+        stage('Restart Backend (PM2)') {
+            steps {
+                echo "♻ Restarting PM2..."
+                sshagent([SSH_KEY]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} '
+                            export PATH=${NODE_PATH}:\$PATH
+                            cd ${APP_DIR}/backend
+                            pm2 restart my-first-backend-server --update-env || pm2 start dist/index.js --name my-first-backend-server
+                            pm2 save
+                        '
                     """
                 }
             }
@@ -41,11 +89,10 @@ pipeline {
 
     post {
         success {
-            echo "Backend deployed successfully to EC2!"
+            echo "🎉 DEPLOYMENT SUCCESSFUL"
         }
         failure {
-            echo "Deployment failed. Check Jenkins logs."
+            echo "❌ DEPLOYMENT FAILED"
         }
     }
 }
-
