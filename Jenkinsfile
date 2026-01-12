@@ -10,7 +10,7 @@ pipeline {
     environment {
         GITHUB_CREDENTIALS = 'github-ssh'
         EC2_USER  = "ubuntu"
-        EC2_IP    = "13.211.37.30"
+        EC2_IP    = "3.106.206.48"
         SSH_KEY   = "ec2-pem"
         APP_DIR = "/home/ubuntu/myproject-backend"
         NODE_PATH = "/home/ubuntu/.nvm/versions/node/v20.19.5/bin"
@@ -78,7 +78,7 @@ pipeline {
                         ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} '
                             export PATH=${NODE_PATH}:\$PATH
                             cd ${APP_DIR}/backend
-                            pm2 restart my-first-backend-server --update-env || pm2 start dist/index.js --name my-first-backend-server
+                            pm2 restart my-first-application --update-env || pm2 start dist/index.js --name my-first-application
                             pm2 save
                         '
                     """
