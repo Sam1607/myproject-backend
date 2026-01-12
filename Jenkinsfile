@@ -9,9 +9,9 @@ pipeline {
 
     environment {
         GITHUB_CREDENTIALS = 'github-ssh'
-        EC2_USER  = "ubuntu"
+        EC2_USER  = "ec2-user"
         EC2_IP    = "3.106.206.48"
-        SSH_KEY   = "ec2-pem"
+        SSH_KEY   = "my-first-application.pem"
         APP_DIR = "/home/ubuntu/myproject-backend"
         NODE_PATH = "/home/ubuntu/.nvm/versions/node/v20.19.5/bin"
         GIT_BRANCH = "main"
