@@ -9,7 +9,7 @@ pipeline {
 
     environment {
         GITHUB_CREDENTIALS = 'github-ssh'
-        EC2_USER  = "ubuntu"
+        EC2_USER  = "ec2-ssh-key"
         EC2_IP    = "3.106.206.48"
         SSH_KEY   = "ec2-user"
         APP_DIR = "/home/ubuntu/myproject-backend"
