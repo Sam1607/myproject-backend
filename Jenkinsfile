@@ -43,17 +43,19 @@ pipeline {
         }
 
         stage('Upload Backend to EC2') {
-            steps {
-                echo "🚀 Uploading backend..."
-                sshagent([SSH_KEY]) {
-                    sh """
-                        rsync -avz --delete \
-                        -e "ssh -o StrictHostKeyChecking=no" \
-                        backend/ ${EC2_USER}@${EC2_IP}:${APP_DIR}
-                    """
-                }
-            }
+    steps {
+        echo "🚀 Uploading backend..."
+        sshagent([SSH_KEY]) {
+            sh """
+                rsync -avz --delete \
+                --exclude='.git' \
+                -e "ssh -o StrictHostKeyChecking=no" \
+                ./ ${EC2_USER}@${EC2_IP}:${APP_DIR}/
+            """
         }
+    }
+}
+
 
         stage('Install Backend Dependencies (EC2)') {
             steps {
