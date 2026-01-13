@@ -36,7 +36,7 @@ pipeline {
                 sshagent([SSH_KEY]) {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} \
-                        'mkdir -p ${APP_DIR}/backend'
+                        'mkdir -p ${APP_DIR}'
                     """
                 }
             }
