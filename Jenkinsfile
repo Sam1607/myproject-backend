@@ -49,7 +49,7 @@ pipeline {
                     sh """
                         rsync -avz --delete \
                         -e "ssh -o StrictHostKeyChecking=no" \
-                        backend/ ${EC2_USER}@${EC2_IP}:${APP_DIR}/backend/
+                        backend/ ${EC2_USER}@${EC2_IP}:${APP_DIR}
                     """
                 }
             }
@@ -62,7 +62,7 @@ pipeline {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} '
                             export PATH=${NODE_PATH}:\$PATH
-                            cd ${APP_DIR}/backend
+                            cd ${APP_DIR}
                             yarn install --production --frozen-lockfile
                         '
                     """
@@ -77,7 +77,7 @@ pipeline {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} '
                             export PATH=${NODE_PATH}:\$PATH
-                            cd ${APP_DIR}/backend
+                            cd ${APP_DIR}
                             pm2 restart my-first-application --update-env || pm2 start dist/index.js --name my-first-application
                             pm2 save
                         '
