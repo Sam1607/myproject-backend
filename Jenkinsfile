@@ -57,20 +57,21 @@ pipeline {
 }
 
 
-        stage('Install Backend Dependencies (EC2)') {
-            steps {
-                echo "📦 Installing backend dependencies..."
-                sshagent([SSH_KEY]) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} '
-                            export PATH=${NODE_PATH}:\$PATH
-                            cd ${APP_DIR}
-                            yarn install --production --frozen-lockfile
-                        '
-                    """
-                }
-            }
+     stage('Install Backend Dependencies (EC2)') {
+    steps {
+        echo "📦 Installing backend dependencies..."
+        sshagent([SSH_KEY]) {
+            sh """
+                ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} '
+                    export PATH=${NODE_PATH}:\$PATH
+                    cd ${APP_DIR}
+                    npm ci --production
+                '
+            """
         }
+    }
+}
+
 
         stage('Restart Backend (PM2)') {
             steps {
